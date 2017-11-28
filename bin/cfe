@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -e
+
+. $(dirname "$0")/.lib.sh || { echo "Unable to load .lib.sh" 1>&2; exit 1; }
+
+. "$SCRIPTDIR"/.chisel.sh
+
+# see https://stackoverflow.com/a/45386798
+isValidArg()(
+    test "$(type -t "$1")" = "function"
+)
+
+cmd="CFE$1"
+shift
+
+isValidArg $cmd || die 1 "$cmd is not a valid command"
+
+$cmd $@

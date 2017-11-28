@@ -1,0 +1,8 @@
+[submodule "submodules/shlib"]
+	path = submodules/shlib
+	url = https://github.build.ge.com/Lynny/shlib.git
+	update = merge
+[submodule "submodules/src/github.com/jpillora/chisel"]
+	path = submodules/src/github.com/jpillora/chisel
+	url = https://github.com/JimNasbyGE/cf-ssh-chisel.git
+	update = merge

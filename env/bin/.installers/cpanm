@@ -1,0 +1,7 @@
+#!/bin/sh
+
+. ~/.env.sh # Might not be loaded yet...
+
+perlbrew install-cpanm
+
+echo '. ~/.perl.env' >> ~/.env.sh

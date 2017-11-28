@@ -1,0 +1,5 @@
+#!/bin/sh
+
+. ~/.env.sh # Might not be loaded yet...
+
+cpanm --notest install App::Sqitch DBD::Pg

@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+
+ver=Python-2.7.13
+down=${ver}.tar.xz
+[ -r "$down" ] || wget https://www.python.org/ftp/python/2.7.13/$down
+[ -d "$ver" ] || tar xf Python-2.7.13.tar.xz
+find . -type d | xargs chmod 0755
+cd $ver
+mkdir -p ${HOME}/python
+./configure -C --prefix=${HOME}/python
+make
+make install
+cd ..
