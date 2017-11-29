@@ -4,6 +4,7 @@ libload debug.sh die.sh
 
 CFEssh() {
   CFEinit && _CFEssh $@
+  debug 99 "CFEssh done"
 }
 
 CFErsync() {
@@ -22,14 +23,24 @@ CFEportIsListening () {
   fi
 }
 
+_CFErun () {
+  local cmd="$1"
+  shift
+  local t
+  [ $DEBUG -lt 9 ] || t='time '
+
+  debug 6 "running $t$cmd $@"
+  $t "$cmd" "$@"
+}
+
 # You probably want CFEssh instead...
 _CFEssh () {
-  ssh -p $CHISEL_LOCAL_PORT vcap@127.0.0.1 $@
+  _CFErun ssh -p $CHISEL_LOCAL_PORT vcap@127.0.0.1 $@
 }
 
 # You probably want CFErsync instead...
 _CFErsync () {
-  rsync -e "ssh -p $CHISEL_LOCAL_PORT" $@ vcap@127.0.0.1: || die $? "unable to rsync"
+  _CFErun rsync -e "ssh -p $CHISEL_LOCAL_PORT" $@ vcap@127.0.0.1: || die $? "unable to rsync"
 }
 
 
@@ -61,7 +72,7 @@ CFEinit() (
     # We know the tunnel is up at this point, so use the internal connection commands
 
     # Move the current .bashrc out of the way
-    _CFEssh '[ -e .profile-original ] || mv .profile .profile-original'
+    _CFEssh '[ -e .profile-original ] || mv .profile .profile-original; [ -e .bashrc-original ] || mv .bashrc .bashrc-original'
 
     # rsync the environment over
     d="$(CFEenvDir)" && cd "$d" && _CFErsync -avP --relative .

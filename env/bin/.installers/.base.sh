@@ -1,11 +1,10 @@
-#!/bin/sh
+#! /usr/bin/env bash
 
-die() {
-    rc=$1
-    shift
-    echo "$@" >&2
-    exit $rc
-}
+set -e +h
+
+savedir=`pwd`
+
+. `dirname $0`/.tools.sh
 
 target=`basename $0`
 
@@ -32,11 +31,15 @@ cd ~/.downloads || exit 2
 "$installer" >&2 || die 1 "error while installing $target"
 
 # Get location of newly installed code before we remove the link we were called from
-new=`which -a $target | grep -v $0 | head -n1`
+new=`which -a $target | grep -v $0 | grep "$HOME" | head -n1`
 if [ -x "$new" ]; then
-    rm $0
-    "$new" "$@"
+  rm -f $0 # it's possible the file was already removed
+  debug 2 "running $new $@ from $savedir"
+  cd "$savedir"
+  "$new" "$@"
 else
-    echo "Newly found command '$new' is not executable" >&2
-    exit 1
+  echo "Newly found command '$new' is not executable" >&2
+  exit 1
 fi
+
+# vi: expandtab ts=2 sw=2

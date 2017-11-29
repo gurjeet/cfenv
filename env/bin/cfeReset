@@ -1,0 +1,3 @@
+rm -rf ~/bin ~/.cfe ~/.env.sh
+
+echo "Environment reset. YOU MUST LOGOUT FOR THIS TO TAKE EFFECT."

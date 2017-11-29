@@ -1,4 +1,12 @@
-#!/bin/sh
+#! /usr/bin/env bash
 
-wget https://bootstrap.pypa.io/get-pip.py && \
-python get-pip.py || exit 1
+set -e
+
+. `dirname $0`/.tools.sh
+
+Download get-pip https://bootstrap.pypa.io/get-pip.py
+
+# Need to manually ensure this is in the path...
+export PATH=$HOME/python/bin:$PATH
+
+python get-pip.py

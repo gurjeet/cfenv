@@ -1,0 +1,19 @@
+#! /usr/bin/env bash
+
+set -e
+
+. `dirname $0`/.tools.sh
+
+ver=9.5 # IF YOU CHANGE THIS THEN FIX env/.bashrc!
+
+# Glossary of Mystery Arguments(R) to wget
+# -q == quiet
+# -nd == save to current directory rather than creating a hierarchy
+# -l1 == descend only one directory down
+# -r == recurse
+# -A == pattern to accept.  Make sure these patterns are specific enough.
+[ -n "$DEBUG" ] || q=-q
+Download libpq5_$ver $q -nd -l1 -r -A 'libpq5_$ver*pgdg15.10+1_amd64.deb' http://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-$ver/
+Download postgresql-client $q -nd -l1 -r -A 'postgresql-client*pgdg14.04+1_amd64.deb' http://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-$ver/
+
+APTinstall libpq5_$ver postgresql-client

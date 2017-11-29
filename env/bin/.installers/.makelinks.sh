@@ -1,25 +1,32 @@
-#!/bin/sh
+#! /usr/bin/env bash
 
-die() {
-    rc=$1
-    shift
-    echo "$@" >&2
-    exit $rc
-}
+set -e
 
 cd "`dirname $0`"
 mypath="`pwd`"
 mydir="`basename $mypath`"
 [ "$mydir" = '.installers' ] || die 2 "Bad location: $0"
 
-# First, create links for the y2j stuff
+. "$mypath"/.tools.sh
+
+_ln () {
+    local source=$1
+    local target=$2
+    [ "$target" != . ] || target="`basename $source`"
+    [ -e "$target" ] || ln -s "$source" "$target" || die 1 "unable to make link for $target"
+}
+
+# create links for the y2j stuff
 for t in j2y y2j yq; do
-    [ -e "$t" ] || ln -s y2j.sh $t
+    _ln y2j.sh $t
 done
 
 cd .. || die 3 "unable to change directory"
 
+# link .tools.sh
+_ln .installers/.tools.sh .
+
 for f in `ls .installers`; do
     target=`basename $f`
-    [ -e "$target" ] || ln -s .installers/.base.sh $target || die 1 "unable to make link for $target"
+    _ln .installers/.base.sh $target
 done

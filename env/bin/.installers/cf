@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+set -e
+
+. `dirname $0`/.tools.sh
+
+Download cf.cli.deb -q -O cf.cli.deb "https://cli.run.pivotal.io/stable?release=debian64"
+
+APTinstall cf.cli.deb

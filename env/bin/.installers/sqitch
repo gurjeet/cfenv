@@ -1,5 +1,10 @@
-#!/bin/sh
+#! /usr/bin/env bash
 
 . ~/.env.sh # Might not be loaded yet...
 
-cpanm --notest install App::Sqitch DBD::Pg
+cpanm --notest install App::Sqitch DBD::Pg & # takes quite a while...
+
+# Also need psql. Just run a dummy command to make sure it's installed
+psql -? >/dev/null &
+
+wait
