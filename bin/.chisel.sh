@@ -6,6 +6,10 @@ CFEssh() {
   CFEinit && _CFEssh $@
   debug 99 "CFEssh done"
 }
+CFEscp() {
+  CFEinit && _CFEscp $@
+  debug 99 "CFEscp done"
+}
 
 CFErsync() {
   CFEinit && _CFErsync $@
@@ -26,16 +30,24 @@ CFEportIsListening () {
 _CFErun () {
   local cmd="$1"
   shift
-  local t
+  local t rc=0
   [ $DEBUG -lt 9 ] || t='time '
 
   debug 6 "running $t$cmd $@"
-  $t "$cmd" "$@"
+  $t "$cmd" "$@" || rc=$?
+  debug 9 "$cmd returned $rc"
+  return $rc
 }
 
 # You probably want CFEssh instead...
 _CFEssh () {
+  # If you change this then fix the loop in CFEinitialized as well!
   _CFErun ssh -p $CHISEL_LOCAL_PORT vcap@127.0.0.1 $@
+}
+
+# You probably want CFEscp instead...
+_CFEscp () {
+  _CFErun scp -P $CHISEL_LOCAL_PORT $@ vcap@127.0.0.1:
 }
 
 # You probably want CFErsync instead...
@@ -43,8 +55,46 @@ _CFErsync () {
   _CFErun rsync -e "ssh -p $CHISEL_LOCAL_PORT" $@ vcap@127.0.0.1: || die $? "unable to rsync"
 }
 
+startTunnel () (
+  local i=0 maxTries=10
 
-CFEinitialized () (
+  # Start the tunnel
+  $(CFEchiselDir)/tunnel -m 1G -k 3G || die $? "unable to start tunnel"
+
+  # We need to wait at least until we see that the port is up...
+  until CFEportIsListening; do
+    [ $i -le $maxTries ] || die 2 "ABORTED; tunnel failed to open."
+    [ $i -gt 0 ] || echo -n "Waiting for tunnel to open ..."
+    i=$((i+1))
+    echo -n .
+    sleep 1
+  done
+  [ $i -eq 0 ] || echo ' done!'
+
+  # But even then, it can take a bit for the connection to become available.
+  local i=0
+  until _CFEssh 'true' 2>/dev/null; do
+    [ $i -le $maxTries ] || break
+    [ $i -gt 0 ] || echo -n "Waiting for ssh connection to become available ..."
+    i=$((i+1))
+    echo -n .
+    sleep 1
+  done
+  if [ $i -ge $maxTries ]; then
+    # run the command one last time without routing STDERR to /dev/null
+    _CFEssh 'true' || die 2 "ABORTED; ssh was unable to connect"
+  fi
+  [ $i -eq 0 ] || echo ' done!'
+
+  rc=0
+  _CFEssh '[ -e $HOME/.cfe ]' || rc=$?
+
+  if [[ $rc -eq 255 ]]; then
+    die $rc "unable to connect to tunnel"
+  fi
+)
+
+CFEinitialized () { # No subprocess so we can actually exit on error
   # connecting is relatively slow, so we optimize for the tunnel already being
   # up, and then check the return code.
   rc=0
@@ -52,15 +102,15 @@ CFEinitialized () (
   
   # 255 means ssh itself failed, so attempt tunnel setup and then try again
   if [[ $rc -eq 255 ]]; then
-    $(CFEchiselDir)/tunnel || die $? "unable to start tunnel"
-    _CFEssh '[ -e $HOME/.cfe ]' || rc=$?
-
-    if [[ $rc -eq 255 ]]; then
-      die $rc "unable to connect to tunnel"
-    fi
+    startTunnel || exit $?
   fi
 
   return $rc
+}
+
+CFEstop() ( CFEstopTunnel )
+CFEstopTunnel() (
+  $(CFEchiselDir)/tunnel stop
 )
 
 CFEinit() (

@@ -1,0 +1,16 @@
+#! /usr/bin/env bash
+
+set -e
+
+. `dirname $0`/.tools.sh
+
+# Go, without which none of this would actually work
+# NOTE: for now this forces version 1.8. TODO: move back to most recent
+LATEST=$(git ls-remote --tags https://github.com/golang/go.git | sort -r -t '/' -k 3 | egrep -v '(beta|rc)' |egrep -o '\bgo.*' | grep 1.8 | head -n 1)
+
+Download golang -q -O golang.tgz "https://storage.googleapis.com/golang/${LATEST}.linux-amd64.tar.gz"
+
+# WARNING: Also hard-coded in env/.setup/setup.sh
+mkdir -p ${HOME}/usr/local
+
+tar xf golang.tgz --directory ${HOME}/usr/local

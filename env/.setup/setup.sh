@@ -11,7 +11,10 @@ envAdd () {
 # Do this before sourcing anything else so the files can be found in PATH
 $HOME/bin/.installers/.makelinks.sh
 
-export PATH=$HOME/usr/lib/postgresql/9.5/bin:$HOME/python/bin:$HOME/bin:$HOME/usr/bin${PATH:+:${PATH}}
+export GOROOT=$HOME/usr/local/go # WARNING: Also hard-coded in env/bin/.installers/go!
+envAdd export GOROOT=$GOROOT
+
+export PATH=$HOME/usr/lib/postgresql/9.5/bin:$HOME/python/bin:$HOME/bin:$HOME/usr/bin:$GOROOT/bin${PATH:+:${PATH}}
 for p in x86_64-linux-gnu man-db; do
     LD_LIBRARY_PATH=$HOME/usr/lib/$p${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 done
