@@ -1,3 +1,13 @@
+#
+# HEADS UP!
+#
+# This file is meant to allow other users to source it! That means EVERYTHING
+# in this file should start with either CFE or _CFE!
+#
+# HEADS UP!
+#
+
+# TODO: Add support for CFE_CHISEL_*
 CHISEL_LOCAL_PORT=${CHISEL_LOCAL_PORT:=5022}
 CHISEL_REMOTE_PORT=${CHISEL_REMOTE_PORT:=2022}
 libload debug.sh die.sh
@@ -6,14 +16,70 @@ CFEssh() {
   CFEinit && _CFEssh $@
   debug 99 "CFEssh done"
 }
-CFEscp() {
-  CFEinit && _CFEscp $@
-  debug 99 "CFEscp done"
+
+CFEscp() ( CFEscpDest '' "$@" )
+CFEscpDest() {
+  CFEinit && _CFEscpDest "$@"
+  debug 99 "CFEscpDest done"
 }
 
-CFErsync() {
-  CFEinit && _CFErsync $@
+# s/scp/rsync/g
+
+CFErsync() ( CFErsyncDest '' "$@" )
+CFErsyncDest() {
+  CFEinit && _CFErsyncDest "$@"
+  debug 99 "CFErsyncDest done"
 }
+
+# Reset the cfe environment by forcing it to re-sync
+CFEreset() {
+  CFEssh 'bin/cfeReset >/dev/null'
+  echo 'Environment will re-sync on next connection. EXISTING CONNECTIONS MUST EXIT.'
+}
+
+CFEstop() ( CFEstopTunnel )
+CFEstopTunnel() (
+  $(CFEchiselDir)/tunnel stop
+)
+
+CFEinit() (
+  if ! CFEinitialized; then
+    echo "Initializing cfenv"
+
+    set -e # Die on error
+
+    # We know the tunnel is up at this point, so use the internal connection commands
+
+    # Move the current .bashrc out of the way
+    _CFEssh '[ -e .profile-original ] || mv .profile .profile-original; [ -e .bashrc-original ] || mv .bashrc .bashrc-original'
+
+    # rsync the environment over
+    d="$(CFEenvDir)" && cd "$d" && _CFErsyncDest '' -avP --relative .
+  fi
+)
+
+# You probably want CFEssh instead...
+_CFEssh () {
+  # If you change this then fix the loop in CFEinitialized as well!
+  _CFErun ssh -p $CHISEL_LOCAL_PORT vcap@127.0.0.1 $@
+}
+
+# You probably want CFEscp instead...
+_CFEscpDest () {
+  [ $# -ge 1 ] || die 1 "must specify destination (HINT: maybe you want scp instead of scpDest?)"
+  local d="$1"
+  shift
+  _CFErun scp -P $CHISEL_LOCAL_PORT $@ vcap@127.0.0.1:"$d"
+}
+
+# You probably want CFErsync instead...
+_CFErsyncDest () {
+  [ $# -ge 1 ] || die 1 "must specify destination (HINT: maybe you want rsync instead of rsyncDest?)"
+  local d="$1"
+  shift
+  _CFErun rsync -e "ssh -p $CHISEL_LOCAL_PORT" $@ vcap@127.0.0.1:"$d" || die $? "unable to rsync"
+}
+
 
 # returns true if the specified port is listening. NOTE: this will not verify that the tunnel enpoint is up!
 CFEportIsListening () {
@@ -39,23 +105,7 @@ _CFErun () {
   return $rc
 }
 
-# You probably want CFEssh instead...
-_CFEssh () {
-  # If you change this then fix the loop in CFEinitialized as well!
-  _CFErun ssh -p $CHISEL_LOCAL_PORT vcap@127.0.0.1 $@
-}
-
-# You probably want CFEscp instead...
-_CFEscp () {
-  _CFErun scp -P $CHISEL_LOCAL_PORT $@ vcap@127.0.0.1:
-}
-
-# You probably want CFErsync instead...
-_CFErsync () {
-  _CFErun rsync -e "ssh -p $CHISEL_LOCAL_PORT" $@ vcap@127.0.0.1: || die $? "unable to rsync"
-}
-
-startTunnel () (
+_CFEstartTunnel () (
   local i=0 maxTries=10
 
   # Start the tunnel
@@ -102,36 +152,15 @@ CFEinitialized () { # No subprocess so we can actually exit on error
   
   # 255 means ssh itself failed, so attempt tunnel setup and then try again
   if [[ $rc -eq 255 ]]; then
-    startTunnel || exit $?
+    _CFEstartTunnel || exit $?
   fi
 
   return $rc
 }
 
-CFEstop() ( CFEstopTunnel )
-CFEstopTunnel() (
-  $(CFEchiselDir)/tunnel stop
-)
-
-CFEinit() (
-  if ! CFEinitialized; then
-    echo "Initializing cfenv"
-
-    set -e # Die on error
-
-    # We know the tunnel is up at this point, so use the internal connection commands
-
-    # Move the current .bashrc out of the way
-    _CFEssh '[ -e .profile-original ] || mv .profile .profile-original; [ -e .bashrc-original ] || mv .bashrc .bashrc-original'
-
-    # rsync the environment over
-    d="$(CFEenvDir)" && cd "$d" && _CFErsync -avP --relative .
-  fi
-)
-
 CFEdir () {
   # Note that this will blow up on a symlink...
-  functionScript=$BASH_SOURCE
+  local functionScript=$(CFEsourceFile)
   ( cd $(dirname $functionScript)/../$1 && pwd ) || die $? "unable to find CFE directory"
 }
 
@@ -142,6 +171,10 @@ CFEenvDir() {
 
 CFEchiselDir () {
   CFEdir submodules/src/github.com/jpillora/chisel
+}
+
+CFEsourceFile () {
+  echo $BASH_SOURCE
 }
 
 # vi: expandtab ts=2 sw=2
