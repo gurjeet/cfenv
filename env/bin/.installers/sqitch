@@ -2,9 +2,32 @@
 
 . ~/.env.sh # Might not be loaded yet...
 
-cpanm --notest install App::Sqitch DBD::Pg & # takes quite a while...
+# Definitely need no hashing in here...
+set +h
+
+bgInstall() {
+    for m in "$@"; do
+        (time cpanm --notest install "$m"; echo "$m installed") &
+        sleep 1 # Try to avoid race conditions...
+    done
+}
+
+# First, just make sure cpanm is installed...
+cpanm --help > /dev/null
+
+# Sqitch takes forever to install, so we fire up some additional install processes to try and speed things up...
+bgInstall DateTime StackTrace::Auto namespace::autoclean File::HomeDir
+
+# Sqitch itself...
+bgInstall App::Sqitch
+
+# We specifically need to install DBD::Pg
+bgInstall DBD::Pg
 
 # Also need psql. Just run a dummy command to make sure it's installed
 psql -? >/dev/null &
 
 wait
+
+# Now just make sure it's actually fully installed
+cpanm --notest install App::Sqitch DBD::Pg

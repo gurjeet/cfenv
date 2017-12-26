@@ -4,7 +4,7 @@ set -e
 
 . $(dirname "$0")/.lib.sh || { echo "Unable to load .lib.sh" 1>&2; exit 1; }
 
-. "$SCRIPTDIR"/.chisel.sh
+. "$SCRIPTDIR"/.chisel.sh || die 1 "unable to source $SCRIPTDIR/.chisel.sh"
 
 # see https://stackoverflow.com/a/45386798
 isValidArg()(

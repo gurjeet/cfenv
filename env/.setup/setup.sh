@@ -3,7 +3,7 @@
 # Blindly assume this location...
 . ~/bin/.installers/.tools.sh
 
-rm -f ~/.env.tmp
+mv -f ~/.setup/.env.tmp ~
 envAdd () {
   echo "$@" >> ~/.env.tmp
 }
@@ -11,16 +11,16 @@ envAdd () {
 # Do this before sourcing anything else so the files can be found in PATH
 $HOME/bin/.installers/.makelinks.sh
 
+# NOTE: env.tmp starts with stuff in the path already
 export GOROOT=$HOME/usr/local/go # WARNING: Also hard-coded in env/bin/.installers/go!
 envAdd export GOROOT=$GOROOT
 
-export PATH=$HOME/usr/lib/postgresql/9.5/bin:$HOME/python/bin:$HOME/bin:$HOME/usr/bin:$GOROOT/bin${PATH:+:${PATH}}
+envAdd pathadd $GOROOT/bin after
+
 for p in x86_64-linux-gnu man-db; do
     LD_LIBRARY_PATH=$HOME/usr/lib/$p${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 done
 export LD_LIBRARY_PATH
-
-envAdd export PATH=$PATH
 envAdd export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
 # perlbrew depends on this
@@ -32,18 +32,18 @@ grep -v 'hash -r' ~/perl5/perlbrew/etc/bashrc > ~/.perlbrew.bashrc # hash -r com
 envAdd 'source ~/.perl.env'
 envAdd 'source ~/.perlbrew.bashrc'
 
+mv -f ~/.env.tmp ~/.env.sh
+
 # Some things take forever to install, so we pro-actively start that process
-source ~/.env.tmp
+source ~/.env.sh
 logdir=~/bin/.log
 mkdir -p $logdir
-[ -e ~/.nopre ] || for f in sqitch aws; do
+[ -e ~/.nopre ] || for f in go sqitch aws; do
   log=$logdir/$f.log
   if ! [ -e $log ]; then
     echo "Installing $f in the background. Install log is available at $log"
-    $f > $log 2>&1 &
+    $f 2>&1 | timestamp > $log &
   fi
 done
-
-mv -f ~/.env.tmp ~/.env.sh
 
 # vi: expandtab ts=2 sw=2

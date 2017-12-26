@@ -33,14 +33,28 @@ CFErsyncDest() {
 
 # Reset the cfe environment by forcing it to re-sync
 CFEreset() {
-  CFEssh 'bin/cfeReset >/dev/null'
+  # We don't need the full environment, but we do at least need the tunnel to
+  # be up. So run CFEinitialized and toss the result.
+  CFEinitialized || true
+  _CFEssh 'bin/cfeReset >/dev/null'
   echo 'Environment will re-sync on next connection. EXISTING CONNECTIONS MUST EXIT.'
 }
+
+CFEdrop() ( CFEdropTunnel )
+CFEdropTunnel() (
+  $(CFEchiselDir)/tunnel drop
+)
 
 CFEstop() ( CFEstopTunnel )
 CFEstopTunnel() (
   $(CFEchiselDir)/tunnel stop
 )
+
+CFErestart() ( CFErestartTunnel )
+CFErestartTunnel() (
+  $(CFEchiselDir)/tunnel restart
+)
+
 
 CFEinit() (
   if ! CFEinitialized; then
@@ -51,10 +65,13 @@ CFEinit() (
     # We know the tunnel is up at this point, so use the internal connection commands
 
     # Move the current .bashrc out of the way
-    _CFEssh '[ -e .profile-original ] || mv .profile .profile-original; [ -e .bashrc-original ] || mv .bashrc .bashrc-original'
+    _CFEssh "[ -e .profile-original ] || mv .profile .profile-original; [ -e .bashrc-original ] || mv .bashrc .bashrc-original; echo 'export REAL_USER=$USER'>.real_user.env"
 
     # rsync the environment over
     d="$(CFEenvDir)" && cd "$d" && _CFErsyncDest '' -avP --relative .
+
+    # Fire up the background setup tasks
+    _CFEssh . .profile
   fi
 )
 
@@ -153,6 +170,9 @@ CFEinitialized () { # No subprocess so we can actually exit on error
   # 255 means ssh itself failed, so attempt tunnel setup and then try again
   if [[ $rc -eq 255 ]]; then
     _CFEstartTunnel || exit $?
+
+    # And re-run...
+    _CFEssh '[ -e $HOME/.cfe ]' || rc=$?
   fi
 
   return $rc

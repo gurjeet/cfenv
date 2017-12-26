@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+
+use Time::HiRes qw(gettimeofday tv_interval);
+$|=1;
+
+sub out {
+    my ( $start_lt, $start, $end, $line ) = @_;
+    printf "%s, %.6f: %s", $start_lt, tv_interval( $start, $end ), $line;
+}
+    
+$prev = [gettimeofday];
+while (<>) {
+    $now = [gettimeofday];
+    $logtime = scalar localtime;
+
+    out( $logtime, $prev, $now, $_ );
+
+    $prev=$now;
+}
+
+# vi: filetype=perl
+# THIS IS A NETSKEL FILE
