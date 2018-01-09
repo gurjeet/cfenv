@@ -4,7 +4,9 @@ set -e
 
 . `dirname $0`/.tools.sh
 
-ver=9.5 # IF YOU CHANGE THIS THEN FIX env/.bashrc!
+source $HOME/.env.sh
+
+ver=$DEFAULT_PGVERSION # IF YOU CHANGE THIS THEN FIX psql AND env/.setup/.env.tmp!
 
 # Glossary of Mystery Arguments(R) to wget
 # -q == quiet
@@ -13,8 +15,8 @@ ver=9.5 # IF YOU CHANGE THIS THEN FIX env/.bashrc!
 # -r == recurse
 # -A == pattern to accept.  Make sure these patterns are specific enough.
 [ -n "$DEBUG" ] || q=-q
-Download libpq5_$ver $q -nd -l1 -r -A "libpq5_${ver}*pgdg15.10+1_amd64.deb" http://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-$ver/
-Download postgresql-contrib $q -nd -l1 -r -A "postgresql-contrib*pgdg14.04+1_amd64.deb" http://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-$ver/
+Download libpq5_$ver $q -nd -l1 -r --accept "libpq5_${ver}*.pgdg*.*+1_amd64.deb" http://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-$ver/
+Download postgresql-contrib $q -nd -l1 -r --reject '*.git*.pgdg*' --accept "postgresql-contrib*pgdg14.04+1_amd64.deb" http://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-$ver/
 
 APTinstall libpq5_$ver postgresql-contrib
 

@@ -4,7 +4,7 @@ set -e
 
 . `dirname $0`/.tools.sh
 
-ver=9.5 # IF YOU CHANGE THIS THEN FIX env/.bashrc!
+ver=$DEFAULT_PGVERSION # IF YOU CHANGE THIS THEN FIX pgbench AND env/.setup/.env.tmp!
 
 # Glossary of Mystery Arguments(R) to wget
 # -q == quiet
@@ -12,8 +12,8 @@ ver=9.5 # IF YOU CHANGE THIS THEN FIX env/.bashrc!
 # -l1 == descend only one directory down
 # -r == recurse
 [ -n "$DEBUG" ] || q=-q
-Download libpq5_$ver $q -nd -l1 -r --accept "libpq5_${ver}*.pgdg15.10+1_amd64.deb" http://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-$ver/
-Download postgresql-client $q -nd -l1 -r --accept "postgresql-client*.pgdg14.04+1_amd64.deb" --reject '*.git*.pgdg*' http://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-$ver/
+Download libpq5_$ver $q -nd -l1 -r --accept "libpq5_${ver}*.pgdg*.*+1_amd64.deb" http://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-$ver/
+Download postgresql-client $q -nd -l1 -r --reject '*.git*.pgdg*' --accept "postgresql-client*.pgdg14.04+1_amd64.deb" http://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-$ver/
 
 # This is how we'd grab the server stuff, should we ever need too
 #Download postgresql-$ver $q -nd -l1 -r -A "postgresql-${ver}_*pgdg14.04+1_amd64.deb" http://apt.postgresql.org/pub/repos/apt/pool/main/p/postgresql-$ver/
