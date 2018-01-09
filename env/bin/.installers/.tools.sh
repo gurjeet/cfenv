@@ -21,9 +21,12 @@ Download() {
   if ! ls $HOME/.downloads/${target}* 2>/dev/null; then
     echo "Downloading $target"
     debug 1 wget "$@"
+    # Download into a work directory, then do a (presumably atomic) mv. This
+    # prevents issues with failed downloads. For some odd reason mv fails when
+    # DEBUG > 0, so we force it to 0 for that command.
     mkdir -p $HOME/.downloads/work &&
-      ( cd $HOME/.downloads/work && rm -f ${target}* && wget "$@" && mv ${target}* .. ) ||
-      die $? "unable to download $target"
+      ( cd $HOME/.downloads/work && rm -f "${target}"* && wget "$@" && DEBUG=0 mv "${target}"* .. ) ||
+      die $? "error downloading $target"
   fi
 }
 
@@ -36,7 +39,7 @@ APTdownload () {
     echo "Downloading $1"
     mkdir -p ~/.downloads &&
       ( cd $HOME/.downloads && apt-get download $1 ) ||
-      die $? "unable to download $1"
+      die $? "error downloading $1"
   fi
 }
 
