@@ -3,6 +3,7 @@
 set -e +h
 
 savedir=`pwd`
+scriptdir=$(dirname $(pwd)/$0)
 
 . `dirname $0`/.tools.sh
 
@@ -10,7 +11,6 @@ target=`basename $0`
 
 echo "$target is not yet installed; attempting to install" >&2
 
-scriptdir=`dirname $0`
 [ "`basename $scriptdir`" != '.installers' ] || die 2 "Bad install location '$scriptdir'"
 instdir="$scriptdir/.installers"
 [ -d "$instdir" ] || die 2 "could not find .installers directory"
