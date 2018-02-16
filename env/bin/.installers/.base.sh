@@ -3,17 +3,16 @@
 set -e +h
 
 savedir=`pwd`
-scriptdir=$(dirname $(pwd)/$0)
-
-. `dirname $0`/.tools.sh
-
+scriptdir=$(cd $(dirname $0); pwd)
 target=`basename $0`
+
+. "$scriptdir"/.tools.sh
 
 echo "$target is not yet installed; attempting to install" >&2
 
 [ "`basename $scriptdir`" != '.installers' ] || die 2 "Bad install location '$scriptdir'"
 instdir="$scriptdir/.installers"
-[ -d "$instdir" ] || die 2 "could not find .installers directory"
+[ -d "$instdir" ] || die 2 "$instdir does not exist or is not a directory"
 
 installer="$instdir/$target"
 [ -x "$installer" ] || die 2 "installer '$installer' does not exist or is not executable"
