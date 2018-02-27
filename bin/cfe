@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# WARNING: do not put any echo statements in this file! External scripts depend
+# on getting clean output from certain commands.
+
 set -e
 
 . $(dirname "$0")/.lib.sh || { echo "Unable to load .lib.sh" 1>&2; exit 1; }
