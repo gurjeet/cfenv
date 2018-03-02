@@ -4,13 +4,29 @@ set -e
 
 . `dirname $0`/.tools.sh
 
-# Go, without which none of this would actually work
-# NOTE: for now this forces version 1.8. TODO: move back to most recent
-LATEST=$(git ls-remote --tags https://github.com/golang/go.git | sort -r -t '/' -k 3 | egrep -v '(beta|rc)' |egrep -o '\bgo.*' | grep 1.8 | head -n 1)
-
-Download golang -q -O golang.tgz "https://storage.googleapis.com/golang/${LATEST}.linux-amd64.tar.gz"
+arch=linux-amd64
 
 # WARNING: Also hard-coded in env/.setup/setup.sh
-mkdir -p ${HOME}/usr/local
+dest="$HOME/usr/local"
+mkdir -p "$dest"
 
-tar xf golang.tgz --directory ${HOME}/usr/local
+# If we have a go installer make use of it instead.
+# TODO: this is ugly and has no place in cfenv. Figure out a better way to refactor this.
+installer="$LYNNY/bin/.installgo.sh"
+if [ -x "$installer" ]; then
+    cache=$(downloadCache)
+
+    mkdir -p "$cache" && $installer -c "$cache" $arch "$HOME/usr/local"
+    exit $?
+fi
+
+# NOTE: for now this forces version 1.8. TODO: move back to most recent
+# NOTE: There's a more sophisticated version of this at https://github.build.ge.com/Lynny/shlib/blob/master/lib/go.sh
+LATEST=$(git ls-remote --tags https://github.com/golang/go.git | sort -r -t '/' -k 3 | egrep -v '(beta|rc)' |egrep -o '\bgo.*' | grep 1.8 | head -n 1)
+
+# NOTE: The current download page (https://golang.org/dl/) uses a different
+# download URL. See also goVersionURL at
+# https://github.build.ge.com/Lynny/shlib/blob/master/lib/go.sh.
+Download golang -q -O golang.tgz "https://storage.googleapis.com/golang/${LATEST}.$arch.tar.gz"
+
+tar xf golang.tgz --directory "$dest"
