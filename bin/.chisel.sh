@@ -126,7 +126,8 @@ _CFEstartTunnel () (
   local i=0 maxTries=10
 
   # Start the tunnel
-  $(CFEchiselDir)/tunnel -m 1G -k 3G || die $? "unable to start tunnel"
+  # TODO: allow user to specify options
+  $(CFEchiselDir)/tunnel || die $? "unable to start tunnel"
 
   # We need to wait at least until we see that the port is up...
   until CFEportIsListening; do
