@@ -1,6 +1,6 @@
 [submodule "submodules/shlib"]
 	path = submodules/shlib
-	url = https://github.build.ge.com/Lynny/shlib.git
+	url = https://github.com/gurjeet/shlib.git
 	update = merge
 [submodule "submodules/src/github.com/jpillora/chisel"]
 	path = submodules/src/github.com/jpillora/chisel
