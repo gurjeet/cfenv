@@ -65,10 +65,10 @@ CFEinit() (
     # We know the tunnel is up at this point, so use the internal connection commands
 
     # Move the current .bashrc out of the way
-    _CFEssh "[ -e .profile-original ] || mv .profile .profile-original; [ -e .bashrc-original ] || mv .bashrc .bashrc-original; echo 'export REAL_USER=$USER'>.real_user.env"
+    _CFEssh "[ -e .profile-original ] || mv .profile .profile-original; [ -e .bashrc-original ] || mv .bashrc .bashrc-original; echo 'export REAL_USER=$USER'>.real_user.env; mkdir -p $HOME/.ssh; chmod 700 $HOME/.ssh"
 
     # rsync the environment over
-    d="$(CFEenvDir)" && cd "$d" && _CFErsyncDest '' -avP --relative .
+    d="$(CFEenvDir)" && chmod 750 "$d" && cd "$d" && _CFErsyncDest '' -avP --relative .
 
     # Fire up the background setup tasks
     _CFEssh . .profile
